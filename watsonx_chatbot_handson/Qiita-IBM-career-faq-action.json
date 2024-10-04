@@ -1,0 +1,1575 @@
+{
+  "name": "Qiita IBM career faq-action",
+  "type": "action",
+  "valid": true,
+  "status": "Available",
+  "created": "2024-08-19T02:23:31.818Z",
+  "updated": "2024-08-19T05:09:26.996Z",
+  "language": "ja",
+  "skill_id": "568c64a0-9187-445c-a1f3-3ee72365aeb4",
+  "workspace": {
+    "actions": [
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_887",
+            "title": "質問受付",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "ご質問をどうぞ"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "question": {
+              "free_text": true
+            },
+            "resolver": {
+              "type": "continue"
+            },
+            "variable": "step_887",
+            "next_step": "step_338"
+          },
+          {
+            "step": "step_338",
+            "title": "watson.aiによる質問意図予測",
+            "output": {
+              "generic": []
+            },
+            "context": {
+              "variables": [
+                {
+                  "value": {
+                    "expression": "\"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\nあなたは日本IBMの人事部新卒採用アシスタントです。\n過去の会話履歴をよく読んで、最後のユーザの質問意図を抽出し、適切な質問に言い換えてください。\n\n<|eot_id|><|start_header_id|>user<|end_header_id|>\nアシスタント: ${previous_answer}\nユーザ: ${step_887}\n\n<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n言い換えられた質問: \""
+                  },
+                  "skill_variable": "prompt"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "callout",
+              "callout": {
+                "path": "/ml/v1/text/generation",
+                "type": "integration_interaction",
+                "method": "POST",
+                "internal": {
+                  "spec_hash_id": "3408d5415323ca392bb94b1fdfd03f6259f0ff1e35a65e5750e2740ba2908435",
+                  "match_scenario": 10,
+                  "catalog_item_id": "4d6c9646-b3b7-450e-afd0-73e41b736f29"
+                },
+                "request_mapping": {
+                  "body": [
+                    {
+                      "value": {
+                        "skill_variable": "prompt"
+                      },
+                      "parameter": "input"
+                    },
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_model_id"
+                      },
+                      "parameter": "model_id"
+                    },
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_project_id"
+                      },
+                      "parameter": "project_id"
+                    },
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_parameters_max_new_tokens"
+                      },
+                      "parameter": "parameters.max_new_tokens"
+                    },
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_parameters_decoding_method"
+                      },
+                      "parameter": "parameters.decoding_method"
+                    }
+                  ],
+                  "query": [
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_version"
+                      },
+                      "parameter": "version"
+                    }
+                  ]
+                },
+                "result_variable": "step_338_result_1"
+              }
+            },
+            "variable": "step_338",
+            "next_step": "step_953"
+          },
+          {
+            "step": "step_953",
+            "title": "watson discovery による文書検索",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "言い換えられた質問: "
+                          },
+                          {
+                            "skill_variable": "query_txt"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "context": {
+              "variables": [
+                {
+                  "value": {
+                    "expression": "${step_338_result_1.body.results}[0].generated_text"
+                  },
+                  "skill_variable": "query_txt"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "callout",
+              "callout": {
+                "path": "/v2/projects/{project_id}/query",
+                "type": "integration_interaction",
+                "method": "POST",
+                "internal": {
+                  "spec_hash_id": "8839e74834d1df3e58d9899f17298627c23c528c6bedb09f4532c40de3d7883c",
+                  "match_scenario": 10,
+                  "catalog_item_id": "9f8f81ae-fa91-4aae-a66b-140279fb2306"
+                },
+                "request_mapping": {
+                  "body": [
+                    {
+                      "value": {
+                        "scalar": 3
+                      },
+                      "parameter": "count"
+                    },
+                    {
+                      "value": {
+                        "skill_variable": "query_txt"
+                      },
+                      "parameter": "natural_language_query"
+                    }
+                  ],
+                  "path": [
+                    {
+                      "value": {
+                        "skill_variable": "watson_discovery_project_id"
+                      },
+                      "parameter": "project_id"
+                    }
+                  ],
+                  "query": [
+                    {
+                      "value": {
+                        "skill_variable": "watsonx_discovery_version"
+                      },
+                      "parameter": "version"
+                    }
+                  ]
+                },
+                "result_variable": "step_953_result_1"
+              }
+            },
+            "variable": "step_953",
+            "next_step": "step_874"
+          },
+          {
+            "step": "step_874",
+            "title": "解答無しの処理",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "回答が見つかりませんでした"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "end_action"
+            },
+            "variable": "step_874",
+            "condition": {
+              "eq": [
+                {
+                  "variable": "step_953_result_1",
+                  "variable_path": "body.matching_results"
+                },
+                {
+                  "scalar": 0
+                }
+              ]
+            },
+            "next_step": "step_336"
+          },
+          {
+            "step": "step_336",
+            "title": "watson.aiによる解答作成",
+            "output": {
+              "generic": []
+            },
+            "context": {
+              "variables": [
+                {
+                  "value": {
+                    "expression": "${step_953_result_1.body.results}[0].length"
+                  },
+                  "skill_variable": "passage_count"
+                },
+                {
+                  "value": {
+                    "expression": "{ ${passage_count}>=1 ?  ${step_953_result_1.body.results}[0].text : ''}"
+                  },
+                  "skill_variable": "passage1"
+                },
+                {
+                  "value": {
+                    "expression": "{ ${passage_count}>=2 ?  ${step_953_result_1.body.results}[0].text : ''}"
+                  },
+                  "skill_variable": "passage2"
+                },
+                {
+                  "value": {
+                    "expression": "{ ${passage_count}>=3 ?  ${step_953_result_1.body.results}[0].text : ''}"
+                  },
+                  "skill_variable": "passage3"
+                },
+                {
+                  "value": {
+                    "expression": "\"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\nあなたは日本IBMの人事部採用担当アシスタントです。\n下記の参考文書をよく読んで、ユーザの質問に対する回答を作成してください。\n参考文書に書かれていないことは回答しないでください。その場合「申し訳ございません。回答が見つかりませんでした。」と回答してください。\n必要に応じて箇条書きで体系的に回答します。\n箇条書きの際はMarkdown形式で回答します。\nその際「#」の代わりに「**太字**」を利用します。\n\n\n参考文書\n${passage1}\n${passage2}\n${passage3}\n<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n${query_txt} 日本語で丁寧に回答してください。<|eot_id|><|start_header_id|>assistant<|end_header_id|>\""
+                  },
+                  "skill_variable": "prompt"
+                },
+                {
+                  "value": {
+                    "expression": "${step_953_result_1.body.results}[0].FAQ_url"
+                  },
+                  "skill_variable": "source_url"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "callout",
+              "callout": {
+                "path": "/ml/v1/text/generation",
+                "type": "integration_interaction",
+                "method": "POST",
+                "internal": {
+                  "spec_hash_id": "3408d5415323ca392bb94b1fdfd03f6259f0ff1e35a65e5750e2740ba2908435",
+                  "match_scenario": 10,
+                  "catalog_item_id": "4d6c9646-b3b7-450e-afd0-73e41b736f29"
+                },
+                "request_mapping": {
+                  "body": [
+                    {
+                      "value": {
+                        "skill_variable": "prompt"
+                      },
+                      "parameter": "input"
+                    },
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_model_id"
+                      },
+                      "parameter": "model_id"
+                    },
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_project_id"
+                      },
+                      "parameter": "project_id"
+                    },
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_parameters_max_new_tokens"
+                      },
+                      "parameter": "parameters.max_new_tokens"
+                    },
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_parameters_decoding_method"
+                      },
+                      "parameter": "parameters.decoding_method"
+                    }
+                  ],
+                  "query": [
+                    {
+                      "value": {
+                        "skill_variable": "watsonxai_version"
+                      },
+                      "parameter": "version"
+                    }
+                  ]
+                },
+                "result_variable": "step_336_result_1"
+              }
+            },
+            "variable": "step_336",
+            "next_step": "step_383"
+          },
+          {
+            "step": "step_383",
+            "title": "回答の表示",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": ""
+                          },
+                          {
+                            "skill_variable": "answer"
+                          },
+                          {
+                            "scalar": "\n\n<br />\n\n\n\n（参照元 | "
+                          },
+                          {
+                            "skill_variable": "source_url"
+                          },
+                          {
+                            "scalar": " ）"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "context": {
+              "variables": [
+                {
+                  "value": {
+                    "expression": "${step_336_result_1.body.results}[0].generated_text"
+                  },
+                  "skill_variable": "answer"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "continue"
+            },
+            "variable": "step_383",
+            "next_step": "step_495"
+          },
+          {
+            "step": "step_495",
+            "output": {
+              "generic": [
+                {
+                  "options": [
+                    {
+                      "label": "続けて質問する",
+                      "value": {
+                        "input": {
+                          "text": "続けて質問する"
+                        }
+                      }
+                    },
+                    {
+                      "label": "解決したので終了する",
+                      "value": {
+                        "input": {
+                          "text": "解決したので終了する"
+                        }
+                      }
+                    },
+                    {
+                      "label": "ホームに戻る",
+                      "value": {
+                        "input": {
+                          "text": "ホームに戻る"
+                        }
+                      }
+                    }
+                  ],
+                  "response_type": "option",
+                  "repeat_on_reprompt": true
+                }
+              ]
+            },
+            "context": {
+              "variables": [
+                {
+                  "value": {
+                    "variable": "step_887"
+                  },
+                  "skill_variable": "previous_query"
+                },
+                {
+                  "value": {
+                    "skill_variable": "answer"
+                  },
+                  "skill_variable": "previous_answer"
+                }
+              ]
+            },
+            "handlers": [
+              {
+                "type": "not_found",
+                "title": "validation_not_found_handler",
+                "output": {
+                  "generic": [
+                    {
+                      "values": [
+                        {
+                          "text_expression": {
+                            "concat": [
+                              {
+                                "scalar": "分かりませんでした。有効なオプションを選択してください:"
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "response_type": "text",
+                      "selection_policy": "incremental"
+                    }
+                  ]
+                },
+                "handler": "validation_not_found_handler",
+                "resolver": {
+                  "type": "prompt_again"
+                },
+                "next_handler": "validation_not_found_max_tries_handler"
+              },
+              {
+                "type": "not_found_max_tries",
+                "title": "validation_not_found_max_tries_handler",
+                "handler": "validation_not_found_max_tries_handler",
+                "resolver": {
+                  "type": "fallback"
+                }
+              }
+            ],
+            "question": {
+              "entity": "entity_6729",
+              "max_tries": 3
+            },
+            "resolver": {
+              "type": "continue"
+            },
+            "variable": "step_495",
+            "next_step": "step_787"
+          },
+          {
+            "step": "step_787",
+            "handlers": [],
+            "resolver": {
+              "type": "replay",
+              "clear": [
+                {
+                  "variable": "step_887"
+                },
+                {
+                  "variable": "step_338"
+                },
+                {
+                  "variable": "step_953"
+                },
+                {
+                  "variable": "step_874"
+                },
+                {
+                  "variable": "step_336"
+                },
+                {
+                  "variable": "step_383"
+                },
+                {
+                  "variable": "step_495"
+                }
+              ]
+            },
+            "variable": "step_787",
+            "condition": {
+              "eq": [
+                {
+                  "variable": "step_495"
+                },
+                {
+                  "value": "続けて質問する",
+                  "from_entity": "entity_6729"
+                }
+              ]
+            }
+          }
+        ],
+        "title": "Retrieval and generation",
+        "action": "action_47691",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "intent": "action_47691_intent_34285"
+        },
+        "variables": [
+          {
+            "title": "No response",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_336",
+            "data_type": "any"
+          },
+          {
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_336_result_1",
+            "data_type": "any"
+          },
+          {
+            "title": "watson.aiによる質問意図予測",
+            "privacy": {
+              "enabled": true
+            },
+            "variable": "step_338",
+            "data_type": "any"
+          },
+          {
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_338_result_1",
+            "data_type": "any"
+          },
+          {
+            "title": "回答の表示",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_383",
+            "data_type": "any"
+          },
+          {
+            "title": "No response",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_495",
+            "data_type": "any"
+          },
+          {
+            "title": "No response",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_787",
+            "data_type": "any"
+          },
+          {
+            "title": "回答が見つかりませんでした",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_874",
+            "data_type": "any"
+          },
+          {
+            "title": "Watson Discoveryによる文書検索",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_887",
+            "data_type": "any"
+          },
+          {
+            "title": "watson discovery による文書検索",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_953",
+            "data_type": "any"
+          },
+          {
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_953_result_1",
+            "data_type": "any"
+          }
+        ],
+        "launch_mode": "learning",
+        "next_action": "fallback",
+        "topic_switch": {
+          "allowed_from": true,
+          "allowed_into": true,
+          "never_return": false
+        },
+        "disambiguation_opt_out": false
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_001",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "申し訳ございません。分かりませんでした。ご質問を言い換えてください。"
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "end_action"
+            },
+            "variable": "step_001",
+            "condition": {
+              "lte": [
+                {
+                  "system_variable": "no_action_matches_count"
+                },
+                {
+                  "scalar": 3
+                }
+              ]
+            },
+            "next_step": "step_002"
+          },
+          {
+            "step": "step_002",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": ""
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "invoke_another_action_and_end",
+              "invoke_action": {
+                "action": "fallback",
+                "policy": "default",
+                "parameters": null,
+                "result_variable": "step_002_result_1"
+              }
+            },
+            "variable": "step_002",
+            "condition": {
+              "gt": [
+                {
+                  "system_variable": "no_action_matches_count"
+                },
+                {
+                  "scalar": 3
+                }
+              ]
+            }
+          }
+        ],
+        "title": "No matches",
+        "action": "anything_else",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "expression": "anything_else"
+        },
+        "variables": [
+          {
+            "title": "申し訳ございません。正しくお伺いしたいので、ご質問を別の言い方に言い換えてもう一度お願いいたします。",
+            "variable": "step_001",
+            "data_type": "any"
+          },
+          {
+            "variable": "step_002",
+            "data_type": "any"
+          },
+          {
+            "variable": "step_002_result_1",
+            "data_type": "any"
+          }
+        ],
+        "disambiguation_opt_out": true
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "digression_failure",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "前のトピックに戻りたいかどうか確認できませんでした。エージェントに接続します。"
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "利用できるエージェントに転送いたします。"
+                },
+                "agent_unavailable": {
+                  "message": "現時点で利用できるエージェントはありません。利用できるようになったら、お取り次ぎいたします。"
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "digression_failure",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Failed to confirm topic return"
+                }
+              ]
+            },
+            "next_step": "step_001"
+          },
+          {
+            "step": "step_001",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "申し訳ございません。分かりませんでした。エージェントにお取り次ぎできます。"
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "利用できるエージェントに転送いたします。"
+                },
+                "agent_unavailable": {
+                  "message": "現時点で利用できるエージェントはありません。利用できるようになったら、お取り次ぎいたします。"
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_001",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Step validation failed"
+                }
+              ]
+            },
+            "next_step": "step_002"
+          },
+          {
+            "step": "step_002",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "お役に立てず申し訳ありません。すぐにエージェントにお取り次ぎいたします。"
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "利用できるエージェントに転送いたします。"
+                },
+                "agent_unavailable": {
+                  "message": "現時点で利用できるエージェントはありません。利用できるようになったら、お取り次ぎいたします。"
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_002",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Agent requested"
+                }
+              ]
+            },
+            "next_step": "step_003"
+          },
+          {
+            "step": "step_003",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "申し訳ありませんが、お尋ねの件が分かりません。エージェントにお取り次ぎいたします。"
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "利用できるエージェントに転送いたします。"
+                },
+                "agent_unavailable": {
+                  "message": "現時点で利用できるエージェントはありません。利用できるようになったら、お取り次ぎいたします。"
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_003",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "No action matches"
+                }
+              ]
+            },
+            "next_step": "step_004"
+          },
+          {
+            "step": "step_004",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "この会話は、人間のエージェントが対応したほうがよさそうです。 エージェントに接続いたします。"
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "利用できるエージェントに転送いたします。"
+                },
+                "agent_unavailable": {
+                  "message": "現時点で利用できるエージェントはありません。 利用できるようになったら、お取り次ぎいたします。"
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_004",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Danger word detected"
+                }
+              ]
+            },
+            "next_step": "step_005"
+          },
+          {
+            "step": "step_005",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "この会話は、人間のエージェントが対応したほうがよさそうです。 エージェントに接続いたします。"
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "利用できるエージェントに転送いたします。"
+                },
+                "agent_unavailable": {
+                  "message": "現時点で利用できるエージェントはありません。 利用できるようになったら、お取り次ぎいたします。"
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_005",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Profanity detected"
+                }
+              ]
+            }
+          }
+        ],
+        "title": "Fallback",
+        "action": "fallback",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "intent": "fallback_connect_to_agent"
+        },
+        "variables": [
+          {
+            "title": "トピックに戻れませんでした",
+            "variable": "digression_failure",
+            "data_type": "any"
+          },
+          {
+            "title": "申し訳ございません。分かりませんでした。エージェントにお取り次ぎできます。",
+            "variable": "step_001",
+            "data_type": "any"
+          },
+          {
+            "title": "お役に立てず申し訳ありません。すぐにエージェントにお取り次ぎいたします。",
+            "variable": "step_002",
+            "data_type": "any"
+          },
+          {
+            "title": "申し訳ありませんが、お尋ねの件が分かりません。エージェントにお取り次ぎいたします。",
+            "variable": "step_003",
+            "data_type": "any"
+          },
+          {
+            "title": "この会話はうまくいっているようです",
+            "variable": "step_004",
+            "data_type": "any"
+          },
+          {
+            "title": "不敬な言葉-この会話は",
+            "variable": "step_005",
+            "data_type": "any"
+          }
+        ],
+        "next_action": "run_always",
+        "disambiguation_opt_out": true
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "danger_word_detected",
+            "title": "Connect to agent",
+            "handlers": [],
+            "resolver": {
+              "type": "fallback"
+            },
+            "variable": "danger_word_detected_variable",
+            "condition": {
+              "entity": "danger_words"
+            },
+            "next_step": "profanity_detected"
+          },
+          {
+            "step": "profanity_detected",
+            "title": "Show warning",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "アシスタントと対話する際には、適切な言語を使用してください。"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [
+              {
+                "type": "max_hits",
+                "handler": "max_hits_handler",
+                "resolver": {
+                  "type": "fallback"
+                }
+              }
+            ],
+            "max_hits": 2,
+            "resolver": {
+              "type": "end_action"
+            },
+            "variable": "profanity_detected_variable",
+            "condition": {
+              "entity": "profane_words"
+            }
+          }
+        ],
+        "title": "Trigger word detected",
+        "action": "run_always",
+        "boosts": [],
+        "handlers": [],
+        "variables": [
+          {
+            "title": "Profanity detected",
+            "variable": "danger_word_detected_variable",
+            "data_type": "any"
+          },
+          {
+            "title": "Profane word detected",
+            "variable": "profanity_detected_variable",
+            "data_type": "any"
+          }
+        ],
+        "next_action": "anything_else"
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_001",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "いらっしゃいませ。ご用件をお伺いいたします。"
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "end_action"
+            },
+            "variable": "step_001"
+          }
+        ],
+        "title": "Greet customer",
+        "action": "welcome",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "expression": "welcome"
+        },
+        "variables": [
+          {
+            "variable": "step_001",
+            "data_type": "any"
+          }
+        ],
+        "next_action": "action_47691",
+        "disambiguation_opt_out": true
+      }
+    ],
+    "intents": [
+      {
+        "intent": "action_47691_intent_34285",
+        "examples": [
+          {
+            "text": "新卒採用に関する質問"
+          }
+        ]
+      },
+      {
+        "intent": "fallback_connect_to_agent",
+        "examples": [
+          {
+            "text": "カスタマーセンターに繋げることは出来ますか？"
+          },
+          {
+            "text": "この案件の担当者に電話して。"
+          },
+          {
+            "text": "ヘルプセンターに繋げてください"
+          },
+          {
+            "text": "担当者と直接話しをしたい"
+          },
+          {
+            "text": "担当者に繋げて欲しい"
+          }
+        ],
+        "description": "人間のエージェント要求します"
+      }
+    ],
+    "entities": [
+      {
+        "entity": "danger_words",
+        "values": [],
+        "fuzzy_match": false
+      },
+      {
+        "entity": "entity_6729",
+        "values": [
+          {
+            "type": "synonyms",
+            "value": "ホームに戻る",
+            "synonyms": []
+          },
+          {
+            "type": "synonyms",
+            "value": "続けて質問する",
+            "synonyms": []
+          },
+          {
+            "type": "synonyms",
+            "value": "解決したので終了する",
+            "synonyms": []
+          }
+        ],
+        "fuzzy_match": true
+      },
+      {
+        "entity": "profane_words",
+        "values": [],
+        "fuzzy_match": false
+      },
+      {
+        "entity": "sys-yes-no",
+        "values": []
+      }
+    ],
+    "metadata": {
+      "api_version": {
+        "major_version": "v2",
+        "minor_version": "2018-11-08"
+      }
+    },
+    "variables": [
+      {
+        "title": "answer",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "answer",
+        "data_type": "string",
+        "description": ""
+      },
+      {
+        "title": "passage1",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "passage1",
+        "data_type": "string",
+        "description": ""
+      },
+      {
+        "title": "passage2",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "passage2",
+        "data_type": "string",
+        "description": ""
+      },
+      {
+        "title": "passage3",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "passage3",
+        "data_type": "string",
+        "description": ""
+      },
+      {
+        "title": "passage_count",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "passage_count",
+        "data_type": "number",
+        "description": ""
+      },
+      {
+        "title": "previous_answer",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "previous_answer",
+        "data_type": "string",
+        "description": "",
+        "initial_value": {
+          "scalar": "nan"
+        }
+      },
+      {
+        "title": "previous_query",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "previous_query",
+        "data_type": "string",
+        "description": "",
+        "initial_value": {
+          "scalar": "nan"
+        }
+      },
+      {
+        "title": "prompt",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "prompt",
+        "data_type": "string",
+        "description": ""
+      },
+      {
+        "title": "query_txt",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "query_txt",
+        "data_type": "string",
+        "description": "",
+        "initial_value": {
+          "scalar": "Nan"
+        }
+      },
+      {
+        "title": "source_file_name",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "source_file_name",
+        "data_type": "string",
+        "description": ""
+      },
+      {
+        "title": "source_url",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "source_url",
+        "data_type": "string",
+        "description": ""
+      },
+      {
+        "title": "source_url1",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "source_url1",
+        "data_type": "string",
+        "description": ""
+      },
+      {
+        "title": "watson_discovery_collection_ids",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "watson_discovery_collection_ids",
+        "data_type": "any",
+        "description": "",
+        "initial_value": {
+          "expression": "[\"1a7370d0-d44e-9816-0000-01913115c5ef\",\"0adfecaf-2776-2d42-0000-0191358a2dc0\"]"
+        }
+      },
+      {
+        "title": "watson_discovery_project_id",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "watson_discovery_project_id",
+        "data_type": "string",
+        "description": "接続するWatson DiscoveryのプロジェクトID",
+        "initial_value": {
+          "scalar": "24f05e7b-efa2-4eed-9801-c1d4facacd0e"
+        }
+      },
+      {
+        "title": "watsonxai_model_id",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "watsonxai_model_id",
+        "data_type": "string",
+        "description": "",
+        "initial_value": {
+          "scalar": "meta-llama/llama-3-70b-instruct"
+        }
+      },
+      {
+        "title": "watsonxai_parameters_decoding_method",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "watsonxai_parameters_decoding_method",
+        "data_type": "string",
+        "description": "",
+        "initial_value": {
+          "scalar": "greedy"
+        }
+      },
+      {
+        "title": "watsonxai_parameters_max_new_tokens",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "watsonxai_parameters_max_new_tokens",
+        "data_type": "number",
+        "description": "",
+        "initial_value": {
+          "scalar": 600
+        }
+      },
+      {
+        "title": "watsonxai_project_id",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "watsonxai_project_id",
+        "data_type": "string",
+        "description": "",
+        "initial_value": {
+          "scalar": "a969c4fd-6c22-4691-bb04-83e3054be794"
+        }
+      },
+      {
+        "title": "watsonxai_version",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "watsonxai_version",
+        "data_type": "string",
+        "description": "",
+        "initial_value": {
+          "scalar": "2023-05-29"
+        }
+      },
+      {
+        "title": "watsonx_discovery_version",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "watsonx_discovery_version",
+        "data_type": "string",
+        "description": "接続するWatson Discoveryのバージョン",
+        "initial_value": {
+          "scalar": "2023-03-31"
+        }
+      }
+    ],
+    "data_types": [],
+    "collections": [],
+    "counterexamples": [],
+    "system_settings": {
+      "variable": {
+        "format": {
+          "time": {
+            "pattern": "short"
+          },
+          "currency": {
+            "fraction_digits": 2
+          }
+        }
+      },
+      "auto_learn": {
+        "apply": true
+      },
+      "topic_switch": {
+        "enabled": true,
+        "messages": {
+          "enable_confirmation": true,
+          "confirmation_failure": {
+            "generic": [
+              {
+                "values": [
+                  {
+                    "text_expression": {
+                      "concat": [
+                        {
+                          "scalar": "申し訳ありません。聞き取れませんでした。確認してください。"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "response_type": "text",
+                "selection_policy": "sequential"
+              }
+            ]
+          },
+          "confirmation_request": {
+            "generic": [
+              {
+                "values": [
+                  {
+                    "text_expression": {
+                      "concat": [
+                        {
+                          "scalar": "前のトピックを続けますか: "
+                        },
+                        {
+                          "system_variable": "digressed_from"
+                        },
+                        {
+                          "scalar": "?"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "response_type": "text",
+                "selection_policy": "sequential"
+              },
+              {
+                "options": [
+                  {
+                    "label": "はい",
+                    "value": {
+                      "input": {
+                        "text": "はい"
+                      }
+                    }
+                  },
+                  {
+                    "label": "いいえ",
+                    "value": {
+                      "input": {
+                        "text": "いいえ"
+                      }
+                    }
+                  }
+                ],
+                "response_type": "option",
+                "repeat_on_reprompt": true
+              }
+            ]
+          }
+        },
+        "max_tries": 3
+      },
+      "disambiguation": {
+        "prompt": "以下でよろしかったでしょうか:",
+        "enabled": true,
+        "randomize": true,
+        "max_suggestions": 5,
+        "suggestion_text_policy": "title",
+        "none_of_the_above_prompt": "上記のいずれでもありません",
+        "use_connect_to_support_prompt": "サポートへの接続",
+        "single_answer_clarification_prompt": "その他"
+      },
+      "search_routing": {
+        "target": "conversational_search"
+      }
+    },
+    "learning_opt_out": false
+  },
+  "description": "created for assistant 93e5077a-5a63-47de-a609-316bfa8d47f8",
+  "assistant_id": "0e5ef3aa-0b1a-4735-b520-7eb701aa4d48",
+  "workspace_id": "568c64a0-9187-445c-a1f3-3ee72365aeb4",
+  "dialog_settings": {},
+  "next_snapshot_version": "1",
+  "environment_id": "0875394e-d6cf-4dcd-a713-ee1c62c2fde9"
+}
